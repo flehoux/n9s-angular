@@ -24,11 +24,11 @@ angular
 // Elsewhere
 
 Person.create({id: '1', firstName: 'Larry', lastName: 'Smith'}) // => Issues a POST request
-.then(function (person) {
-  person.firsName = 'John'
-  person.save() // => Issues a PUT request
-  person.remove() // => Issues a DELETE request
-})
+      .then(function (person) {
+        person.firsName = 'John'
+        person.save() // => Issues a PUT request
+        person.remove() // => Issues a DELETE request
+      })
 
 Person.findOne('1')
       .then(function (person) {  }) // => Issues a GET request to http://127.0.0.1/people/1
