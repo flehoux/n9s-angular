@@ -1,7 +1,7 @@
 const {Mixin} = require('nucleotides')
 
 module.exports = Mixin('ScopeMixin')
-  .method('bind', function (scope, options) {
+  .method('bindToScope', function (scope, options) {
     this.$emit('load', options)
     this.constructor.$emit('load', this, options)
     let listenForChange = () => scope.$evalAsync()
