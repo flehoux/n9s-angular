@@ -2,7 +2,7 @@
 
 describe('A simple model backed by a REST service through the Angular mixin', function () {
   const {Model} = require('nucleotides')
-  const {AngularHttpMixin} = require('..')
+  const HttpMixin = require('../http')
   const httpSpy = jasmine.createSpy()
   const storage = {}
 
@@ -60,7 +60,7 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
       lastName: String,
       nas: String
     })
-    .use(new AngularHttpMixin({
+    .use(new HttpMixin({
       $http: function (arg) {
         return new Promise(function (resolve) {
           setTimeout(function () {
