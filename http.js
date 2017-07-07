@@ -1,12 +1,12 @@
-const {Mixin, Storage} = require('nucleotides')
+const {Mixin, Model, Storage} = require('nucleotides')
 const [GET, POST, PUT, DELETE] = ['GET', 'POST', 'PUT', 'DELETE']
 
-function buildRequest (mixin, method, object, params) {
-  let url = mixin.getUrl(method, object, params)
+function buildRequest (mixin, model, method, object, params) {
+  let url = mixin.getUrl(method, object, params, model)
   let options = Object.assign({}, mixin.options, {url, method})
 
   if (method === POST || method === PUT) {
-    options.data = object.clean
+    options.data = object.$clean
   }
   options.params = params
 
@@ -34,12 +34,13 @@ function normalizeAngularResponse (mixin, model, response, generate = false) {
 }
 
 function store (mixin, flow, params) {
+  let idKey = Storage.idKeyFor(this.constructor)
   if (this.$isNew) {
-    buildRequest(mixin, POST, this, params).then(
+    buildRequest(mixin, this.constructor, POST, this, params).then(
       (response) => {
         let resp = normalizeAngularResponse(mixin, null, response)
-        if (resp.data != null && resp.data.data != null && resp.data.data[mixin.idKey] != null) {
-          this[mixin.idKey] = resp.data.data[mixin.idKey]
+        if (resp.data != null && resp.data.data != null && resp.data.data[idKey] != null) {
+          this[idKey] = resp.data.data[idKey]
         }
         flow.resolve(resp)
       },
@@ -48,7 +49,7 @@ function store (mixin, flow, params) {
       }
     )
   } else {
-    buildRequest(mixin, PUT, this, params).then(
+    buildRequest(mixin, this.constructor, PUT, this, params).then(
       (response) => {
         flow.resolve(normalizeAngularResponse(mixin, null, response))
       },
@@ -60,7 +61,7 @@ function store (mixin, flow, params) {
 }
 
 function remove (mixin, flow, params) {
-  buildRequest(mixin, DELETE, this, params).then(
+  buildRequest(mixin, this.constructor, DELETE, this, params).then(
     (response) => {
       flow.resolve(normalizeAngularResponse(mixin, null, response))
     },
@@ -77,10 +78,11 @@ function findOne (mixin, flow, object, params) {
   if (typeof object === 'number') {
     object = object.toString()
   }
-  if (typeof object === 'string' && mixin.idKey) {
-    object = {[mixin.idKey]: object}
+  let idKey = Storage.idKeyFor(this)
+  if (typeof object === 'string' && idKey) {
+    object = {[idKey]: object}
   }
-  buildRequest(mixin, GET, object, params).then(
+  buildRequest(mixin, this, GET, object, params).then(
     (response) => {
       flow.resolve(normalizeAngularResponse(mixin, this, response, true))
     },
@@ -98,7 +100,7 @@ function findMany (mixin, flow, params = {}) {
     url = url + params
     params = {}
   }
-  buildRequest(mixin, GET, null, params).then(
+  buildRequest(mixin, this, GET, null, params).then(
     (response) => {
       flow.resolve(normalizeAngularResponse(mixin, this, response, true))
     },
@@ -110,7 +112,7 @@ function findMany (mixin, flow, params = {}) {
 
 var HttpMixin = Mixin('HttpMixin')
   .construct(function (options) {
-    let {$http, url, id} = options
+    let {$http, url} = options
 
     if ($http == null || typeof $http !== 'function') {
       throw new Mixin.Error('The HttpMixin mixin requires the \'$http\' option', this)
@@ -124,16 +126,10 @@ var HttpMixin = Mixin('HttpMixin')
       throw new Mixin.Error('The HttpMixin mixin requires the \'url\' option', this)
     }
 
-    if (typeof id !== 'string') {
-      id = 'id'
-    }
-
     this.$http = $http
     this.baseUrl = url
-    this.idKey = id
     delete options.$http
     delete options.url
-    delete options.id
     this.options = options
   })
   .implement(Storage.$$store, store)
@@ -141,15 +137,21 @@ var HttpMixin = Mixin('HttpMixin')
   .implement(Storage.$$findOne, findOne)
   .implement(Storage.$$findMany, findMany)
 
-HttpMixin.prototype.getUrl = function (method, object, params) {
+HttpMixin.prototype.getUrl = function (method, object, params, model) {
+  let id
+  if (Model.isInstance(object)) {
+    id = Storage.idFor(object)
+  } else if (object != null && Model.isModel(model)) {
+    id = object[Storage.idKeyFor(model)]
+  }
   if (method === GET) {
-    if (object) {
-      return this.baseUrl + object[this.idKey]
+    if (id) {
+      return this.baseUrl + id
     } else {
       return this.baseUrl
     }
   } else if (method === PUT || method === DELETE) {
-    return this.baseUrl + object[this.idKey]
+    return this.baseUrl + id
   } else if (method === POST) {
     return this.baseUrl
   }

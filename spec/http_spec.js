@@ -1,7 +1,7 @@
 /* global describe it expect jasmine afterEach */
 
 describe('A simple model backed by a REST service through the Angular mixin', function () {
-  const {Model} = require('nucleotides')
+  const {Model, Storage} = require('nucleotides')
   const HttpMixin = require('../http')
   const httpSpy = jasmine.createSpy()
   const storage = {}
@@ -55,6 +55,7 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
   })
 
   var Person = Model('Person')
+    .set(Storage.$$idKey, 'nas')
     .attributes({
       firstName: String,
       lastName: String,
@@ -108,7 +109,7 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
       let [method, request] = httpSpy.calls.argsFor(0)
       let response = person.$response
       expect(method).toBe('GET')
-      expect(person.clean).toEqual(storage[key])
+      expect(person.$clean).toEqual(storage[key])
       expect(person.$isNew).toBe(false)
       expect(response.data.status).toBe(200)
       expect(request.url).toBe(`http://localhost:8000/${key}`)
@@ -124,7 +125,7 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
       expect(httpSpy.calls.count()).toBe(1)
       let [method, request] = httpSpy.calls.argsFor(0)
       let response = person.$response
-      expect(person.clean).toEqual(storage[key])
+      expect(person.$clean).toEqual(storage[key])
       expect(method).toBe('GET')
       expect(person.$isNew).toBe(false)
       expect(response.data.status).toBe(200)
