@@ -5,6 +5,11 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
   const HttpMixin = require('../http')
   const httpSpy = jasmine.createSpy()
   const storage = {}
+  const adults = [
+    {nas: '123', firstName: 'Mary', lastName: 'Smith'},
+    {nas: '234', firstName: 'John', lastName: 'Duchesne'},
+    {nas: '345', firstName: 'Luke', lastName: 'Skywalker'}
+  ]
 
   let i = 0
   const idGetter = () => (i++).toString()
@@ -12,10 +17,17 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
   const router = {
     GET: function (arg) {
       httpSpy('GET', arg)
-      let [id] = arg.url.split('/').slice(-1)
-      return {
-        data: storage[id],
-        status: 200
+      if (arg.params != null && arg.params.age === '>18') {
+        return {
+          data: adults,
+          status: 200
+        }
+      } else {
+        let [id] = arg.url.split('/').slice(-1)
+        return {
+          data: storage[id],
+          status: 200
+        }
       }
     },
     POST: function (arg) {
@@ -136,6 +148,21 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
     })
   })
 
+  it('should sent GET request to support <Model>.findMany(params)', function (done) {
+    Person.findMany({age: '>18'}).then(function (respAdults) {
+      expect(httpSpy.calls.count()).toBe(1)
+      let [method, request] = httpSpy.calls.argsFor(0)
+      let response = respAdults.$response
+      expect(method).toBe('GET')
+      expect(respAdults.$clean).toEqual(adults)
+      expect(response.data.status).toBe(200)
+      expect(request.url).toBe(`http://localhost:8000/`)
+      expect(request.params).toEqual({age: '>18'})
+      expect(request.data).not.toBeDefined()
+      done()
+    })
+  })
+
   it('should send PUT request for <Model>.save()', function (done) {
     let key = Object.keys(storage)[1]
     Person.findOne(key).then(function (person) {
@@ -185,7 +212,7 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
   })
 
   it('should include optional parameters in DELETE request for <Model>.remove(params)', function (done) {
-    let key = Object.keys(storage)[1]
+    let key = Object.keys(storage)[2]
     Person.findOne(key).then(function (person) {
       httpSpy.calls.reset()
       person.remove({foo: 'bar'}).then(function (response) {
