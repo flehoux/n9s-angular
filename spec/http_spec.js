@@ -1,7 +1,7 @@
 /* global describe it expect jasmine afterEach */
 
 describe('A simple model backed by a REST service through the Angular mixin', function () {
-  const {Model, Storage} = require('nucleotides')
+  const {Model, Protocol} = require('nucleotides')
   const HttpMixin = require('../http')
   const httpSpy = jasmine.createSpy()
   const storage = {}
@@ -67,7 +67,8 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
   })
 
   var Person = Model('Person')
-    .set(Storage.$$idKey, 'nas')
+    .set(Protocol.Identifiable.idKey, 'nas')
+    .set(Protocol.Identifiable.url, 'http://localhost:8000')
     .attributes({
       firstName: String,
       lastName: String,
@@ -80,9 +81,7 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
             resolve(router[arg.method](arg))
           }, 50)
         })
-      },
-      url: 'http://localhost:8000',
-      id: 'nas'
+      }
     }))
 
   it('should send POST request to support <Model>.create()', function (done) {
@@ -156,19 +155,19 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
       expect(method).toBe('GET')
       expect(respAdults.$clean).toEqual(adults)
       expect(response.data.status).toBe(200)
-      expect(request.url).toBe(`http://localhost:8000/`)
+      expect(request.url).toBe(`http://localhost:8000`)
       expect(request.params).toEqual({age: '>18'})
       expect(request.data).not.toBeDefined()
       done()
     })
   })
 
-  it('should send PUT request for <Model>.save()', function (done) {
+  it('should send PUT request for <Model>.$save()', function (done) {
     let key = Object.keys(storage)[1]
     Person.findOne(key).then(function (person) {
       expect(person.$isNew).toBe(false)
       person.firstName = 'Johny'
-      person.save().then(function (person2) {
+      person.$save().then(function (person2) {
         let response = person.$response
         expect(storage[key].firstName).toBe('Johny')
         expect(person2).toBe(person)
@@ -178,13 +177,13 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
     })
   })
 
-  it('should include optional parameters in PUT request for <Model>.save(params)', function (done) {
+  it('should include optional parameters in PUT request for <Model>.$save(params)', function (done) {
     let key = Object.keys(storage)[1]
     Person.findOne(key).then(function (person) {
       expect(person.$isNew).toBe(false)
       person.firstName = 'Johny'
       httpSpy.calls.reset()
-      person.save({foo: 'bar'}).then(function (person2) {
+      person.$save({foo: 'bar'}).then(function (person2) {
         let response = person.$response
         let [method, request] = httpSpy.calls.argsFor(0)
         expect(request.params).toEqual({foo: 'bar'})
@@ -197,11 +196,11 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
     })
   })
 
-  it('should send DELETE request for <Model>.remove()', function (done) {
+  it('should send DELETE request for <Model>.$remove()', function (done) {
     let key = Object.keys(storage)[1]
     Person.findOne(key).then(function (person) {
       httpSpy.calls.reset()
-      person.remove().then(function (response) {
+      person.$remove().then(function (response) {
         let [method] = httpSpy.calls.argsFor(0)
         expect(method).toBe('DELETE')
         expect(storage[key]).not.toBeDefined()
@@ -211,11 +210,11 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
     })
   })
 
-  it('should include optional parameters in DELETE request for <Model>.remove(params)', function (done) {
+  it('should include optional parameters in DELETE request for <Model>.$remove(params)', function (done) {
     let key = Object.keys(storage)[2]
     Person.findOne(key).then(function (person) {
       httpSpy.calls.reset()
-      person.remove({foo: 'bar'}).then(function (response) {
+      person.$remove({foo: 'bar'}).then(function (response) {
         let [method, request] = httpSpy.calls.argsFor(0)
         expect(method).toBe('DELETE')
         expect(request.params).toEqual({foo: 'bar'})

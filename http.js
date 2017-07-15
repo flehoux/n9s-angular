@@ -1,8 +1,9 @@
-const {Mixin, Model, Storage} = require('nucleotides')
+const {Mixin, Protocol} = require('nucleotides')
+const {Queryable, Identifiable, Storable} = Protocol
 const [GET, POST, PUT, DELETE] = ['GET', 'POST', 'PUT', 'DELETE']
 
 function buildRequest (mixin, model, method, object, params) {
-  let url = mixin.getUrl(method, object, params, model)
+  let url = Identifiable.urlFor(model, method, object)
   let options = Object.assign({}, mixin.options, {url, method})
 
   if (method === POST || method === PUT) {
@@ -19,22 +20,22 @@ function normalizeAngularResponse (mixin, model, response, generate = false) {
     if (generate) {
       if (response.data != null && response.data instanceof Array) {
         result = response.data.map((object) => {
-          return Reflect.construct(model, [object])
+          return Storable.decode(model, object)
         })
       } else {
-        result = Reflect.construct(model, [response.data])
+        result = Storable.decode(model, response.data)
       }
     } else {
       result = response.data
     }
-    return new Storage.Success(response.status, result, response, mixin)
+    return new Queryable.Success(response.status, result, response, mixin)
   } else {
-    return new Storage.Failure(response.status, response.data, response, mixin)
+    return new Queryable.Failure(response.status, response.data, response, mixin)
   }
 }
 
 function store (mixin, flow, params) {
-  let idKey = Storage.idKeyFor(this.constructor)
+  let idKey = Identifiable.idKeyFor(this.constructor)
   if (this.$isNew) {
     buildRequest(mixin, this.constructor, POST, this, params).then(
       (response) => {
@@ -78,7 +79,7 @@ function findOne (mixin, flow, object, params) {
   if (typeof object === 'number') {
     object = object.toString()
   }
-  let idKey = Storage.idKeyFor(this)
+  let idKey = Identifiable.idKeyFor(this)
   if (typeof object === 'string' && idKey) {
     object = {[idKey]: object}
   }
@@ -111,50 +112,21 @@ function findMany (mixin, flow, params = {}) {
 }
 
 var HttpMixin = Mixin('HttpMixin')
+  .require(Identifiable)
   .construct(function (options) {
-    let {$http, url} = options
+    let {$http} = options
 
     if ($http == null || typeof $http !== 'function') {
-      throw new Mixin.Error('The HttpMixin mixin requires the \'$http\' option', this)
-    }
-
-    if (typeof url === 'string') {
-      if (url.slice(-1) !== '/') {
-        url = url + '/'
-      }
-    } else {
-      throw new Mixin.Error('The HttpMixin mixin requires the \'url\' option', this)
+      throw new Mixin.Error('The Angular.HttpMixin mixin requires the \'$http\' option', this)
     }
 
     this.$http = $http
-    this.baseUrl = url
     delete options.$http
-    delete options.url
     this.options = options
   })
-  .implement(Storage.$$store, store)
-  .implement(Storage.$$remove, remove)
-  .implement(Storage.$$findOne, findOne)
-  .implement(Storage.$$findMany, findMany)
-
-HttpMixin.prototype.getUrl = function (method, object, params, model) {
-  let id
-  if (Model.isInstance(object)) {
-    id = Storage.idFor(object)
-  } else if (object != null && Model.isModel(model)) {
-    id = object[Storage.idKeyFor(model)]
-  }
-  if (method === GET) {
-    if (id) {
-      return this.baseUrl + id
-    } else {
-      return this.baseUrl
-    }
-  } else if (method === PUT || method === DELETE) {
-    return this.baseUrl + id
-  } else if (method === POST) {
-    return this.baseUrl
-  }
-}
+  .implement(Queryable.store, store)
+  .implement(Queryable.remove, remove)
+  .implement(Queryable.findOne, findOne)
+  .implement(Queryable.findMany, findMany)
 
 module.exports = HttpMixin
