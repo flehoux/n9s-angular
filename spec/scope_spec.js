@@ -1,6 +1,6 @@
 /* global describe it expect jasmine */
 
-const {Model, makeEmitter, Protocol, Mixin, Collection} = require('nucleotides')
+const {Model, makeEmitter, Protocol, Mixin} = require('nucleotides')
 const ScopeMixin = require('../scope')
 
 const Person = Model('Person')

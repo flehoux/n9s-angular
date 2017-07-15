@@ -77,9 +77,9 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
     .use(new HttpMixin({
       $http: function (arg) {
         return new Promise(function (resolve) {
-          setTimeout(function () {
+          setImmediate(function () {
             resolve(router[arg.method](arg))
-          }, 50)
+          })
         })
       }
     }))
