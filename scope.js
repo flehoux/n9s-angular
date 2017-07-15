@@ -1,29 +1,39 @@
-const {Mixin, Collection} = require('nucleotides')
+const {Mixin, Protocol} = require('nucleotides')
 
 module.exports = Mixin('ScopeMixin')
-  .method('bindToScope', function (scope, options) {
+  .method('bindToScope', function (mixin, scope, options) {
     this.$emit('mount', options)
     this.constructor.$emit('mount', this, options)
-    let listenForChange = () => scope.$evalAsync()
+    let scopeApply = (...args) => {
+      scope.$applyAsync()
+    }
     scope.$on('$destroy', () => {
       this.$emit('unmount')
       this.constructor.$emit('unmount', this)
-      this.$off('change', listenForChange)
+      this.$off('change', scopeApply)
     })
-    this.$on('change', listenForChange)
+    this.$on('change', scopeApply)
+    this.$on('resolved', scopeApply)
   })
-  .implement(Collection.$$prepareCollection, function (scope, options) {
-    this.bindToScope = function () {
+  .implement(Protocol.Collectable.prepareCollection, function (mixin, collection, options) {
+    collection.bindToScope = function (scope) {
       this.$emit('mount', options)
-      let listenForChange = (object) => {
-        if (this.has(object)) {
-          scope.$evalAsync()
+      let scopeApply = (object) => {
+        if (this.$has(object)) {
+          scope.$applyAsync()
         }
       }
+      let blindScopeApply = () => scope.$applyAsync()
       scope.$on('$destroy', () => {
         this.$emit('unmount')
-        this.$model.$off('change', listenForChange)
+        this.$model.$off('change', scopeApply)
+        this.$model.$off('resolved', scopeApply)
+        this.$off('add', blindScopeApply)
+        this.$off('remove', blindScopeApply)
       })
-      this.$model.$on('change', listenForChange)
+      this.$model.$on('change', scopeApply)
+      this.$model.$on('resolved', scopeApply)
+      this.$on('add', blindScopeApply)
+      this.$on('remove', blindScopeApply)
     }
   })
