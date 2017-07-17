@@ -14,7 +14,15 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
   let i = 0
   const idGetter = () => (i++).toString()
 
-  const router = {
+  const $httpMock = function (arg) {
+    return new Promise(function (resolve) {
+      setImmediate(function () {
+        resolve($httpMock[arg.method](arg))
+      })
+    })
+  }
+
+  Object.assign($httpMock, {
     GET: function (arg) {
       httpSpy('GET', arg)
       if (arg.params != null && arg.params.age === '>18') {
@@ -60,7 +68,7 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
         status: 204
       }
     }
-  }
+  })
 
   afterEach(function () {
     httpSpy.calls.reset()
@@ -74,15 +82,7 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
       lastName: String,
       nas: String
     })
-    .use(new HttpMixin({
-      $http: function (arg) {
-        return new Promise(function (resolve) {
-          setImmediate(function () {
-            resolve(router[arg.method](arg))
-          })
-        })
-      }
-    }))
+    .use(new HttpMixin({$http: $httpMock}))
 
   it('should send POST request to support <Model>.create()', function (done) {
     let data = {nas: idGetter(), firstName: 'John', lastName: 'Smith'}
