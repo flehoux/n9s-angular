@@ -1,6 +1,8 @@
 # n9s-angular
 Angular Mixins for [Nucleotides.js][1]
 
+![Travis](https://travis-ci.org/matehat/n9s-angular.svg?branch=master)
+
 ## Usage
 
 ```javascript
