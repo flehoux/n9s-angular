@@ -13,6 +13,7 @@
   "author": "mathieu@damours.org",
   "license": "MIT",
   "devDependencies": {
+    "nucleotides": "matehat/nucleotides.js#master",
     "jasmine": "^2.6.0"
   }
 }
