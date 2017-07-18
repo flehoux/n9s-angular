@@ -15,5 +15,17 @@
   "devDependencies": {
     "nucleotides": "matehat/nucleotides.js#master",
     "jasmine": "^2.6.0"
+  },
+  "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            "es2015"
+          ]
+        }
+      ]
+    ]
   }
 }
