@@ -17,7 +17,7 @@ const Person = Model('Person')
 
 class ScopeMock {
   constructor () {
-    this.spy = jasmine.createSpy('Scope')
+    this.spy = jasmine.createSpy('ScopeMock')
   }
   $applyAsync () {
     this.spy()
@@ -64,7 +64,7 @@ describe('A Model instance bound to a Angular Scope', function () {
 describe('A Collection of Model instances, bound to a Angular Scope', function () {
   it('should trigger a digest cycle upon changes to any element', function () {
     let coll = Person.createCollection()
-    coll.push({firstName: 'John', lastName: 'Smith'})
+    coll.push({firstName: 'John', lastName: 'Smith', id: '2'})
     let person = coll[0]
     let scope = new ScopeMock()
     coll.bindToScope(scope)

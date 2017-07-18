@@ -89,7 +89,6 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
   it('should send POST request to support <Model>.create()', function (done) {
     let data = {nas: idGetter(), firstName: 'John', lastName: 'Smith'}
     Person.create(data).then(function (person) {
-      console.log(storage)
       expect(httpSpy.calls.count()).toBe(1)
       let [method, request] = httpSpy.calls.argsFor(0)
       let response = person.$response
