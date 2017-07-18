@@ -35,7 +35,7 @@ function normalizeAngularResponse (mixin, model, response, generate = false) {
 }
 
 function store (mixin, flow, params) {
-  let idKey = Identifiable.idKeyFor(this.constructor)
+  let idKey = Identifiable.idKey(this.constructor)
   if (this.$isNew) {
     buildRequest(mixin, this.constructor, POST, this, params).then(
       (response) => {
@@ -79,7 +79,7 @@ function findOne (mixin, flow, object, params) {
   if (typeof object === 'number') {
     object = object.toString()
   }
-  let idKey = Identifiable.idKeyFor(this)
+  let idKey = Identifiable.idKey(this)
   if (typeof object === 'string' && idKey) {
     object = {[idKey]: object}
   }
