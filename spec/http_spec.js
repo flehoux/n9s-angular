@@ -78,13 +78,15 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
 
   var Person = Model('Person')
     .set(Protocol.Identifiable.idKey, 'nas')
-    .set(Protocol.Identifiable.url, 'http://localhost:8000')
+    .set(Protocol.Identifiable.url, 'users')
     .attributes({
       firstName: String,
       lastName: String,
       nas: String
     })
-    .use(new HttpMixin({$http: $httpMock}))
+
+  var mixin = new HttpMixin({$http: $httpMock})
+  Person.use(mixin)
 
   it('should send POST request to support <Model>.create()', function (done) {
     let data = {nas: idGetter(), firstName: 'John', lastName: 'Smith'}
@@ -125,11 +127,30 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
       expect(person.$clean).toEqual(storage[key])
       expect(person.$isNew).toBe(false)
       expect(response.data.status).toBe(200)
-      expect(request.url).toBe(`http://localhost:8000/${key}`)
+      expect(request.url).toBe(`users/${key}`)
       expect(request.params).not.toBeDefined()
       expect(request.data).not.toBeDefined()
       done()
     })
+  })
+
+  it('should sent GET request to support <Model>.findOne(id)', function (done) {
+    let key = Object.keys(storage)[0]
+    mixin.baseUrl = 'http://127.0.0.1/'
+    Person.findOne(key).then(function (person) {
+      expect(httpSpy.calls.count()).toBe(1)
+      let [method, request] = httpSpy.calls.argsFor(0)
+      let response = person.$response
+      expect(method).toBe('GET')
+      expect(person.$clean).toEqual(storage[key])
+      expect(person.$isNew).toBe(false)
+      expect(response.data.status).toBe(200)
+      expect(request.url).toBe(`http://127.0.0.1/users/${key}`)
+      expect(request.params).not.toBeDefined()
+      expect(request.data).not.toBeDefined()
+      done()
+    })
+    mixin.baseUrl = ''
   })
 
   it('should include optional parameters in GET request for <Model>.findOne(id, params)', function (done) {
@@ -142,7 +163,7 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
       expect(method).toBe('GET')
       expect(person.$isNew).toBe(false)
       expect(response.data.status).toBe(200)
-      expect(request.url).toBe(`http://localhost:8000/${key}`)
+      expect(request.url).toBe(`users/${key}`)
       expect(request.params).toEqual({foo: 'bar'})
       expect(request.data).not.toBeDefined()
       done()
@@ -157,7 +178,7 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
       expect(method).toBe('GET')
       expect(respAdults.$clean).toEqual(adults)
       expect(response.data.status).toBe(200)
-      expect(request.url).toBe(`http://localhost:8000`)
+      expect(request.url).toBe(`users`)
       expect(request.params).toEqual({age: '>18'})
       expect(request.data).not.toBeDefined()
       done()

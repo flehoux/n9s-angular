@@ -3,7 +3,7 @@ const {Queryable, Identifiable, Storable} = Protocol
 const [GET, POST, PUT, DELETE] = ['GET', 'POST', 'PUT', 'DELETE']
 
 function buildRequest (mixin, model, method, object, params) {
-  let url = Identifiable.urlFor(model, method, object)
+  let url = mixin.baseUrl + Identifiable.urlFor(model, method, object)
   let options = Object.assign({}, mixin.options, {url, method})
 
   if (method === POST || method === PUT) {
@@ -94,13 +94,6 @@ function findOne (mixin, flow, object, params) {
 }
 
 function findMany (mixin, flow, params = {}) {
-  let url = mixin.baseUrl
-  if (params === null) {
-    params = {}
-  } else if (typeof params === 'string' && typeof url === 'string') {
-    url = url + params
-    params = {}
-  }
   buildRequest(mixin, this, GET, null, params).then(
     (response) => {
       flow.resolve(normalizeAngularResponse(mixin, this, response, true))
@@ -114,14 +107,16 @@ function findMany (mixin, flow, params = {}) {
 var HttpMixin = Mixin('HttpMixin')
   .require(Identifiable)
   .construct(function (options) {
-    let {$http} = options
+    let {$http, baseUrl} = options
 
     if ($http == null || typeof $http !== 'function') {
       throw new Mixin.Error('The Angular.HttpMixin mixin requires the \'$http\' option', this)
     }
 
     this.$http = $http
+    this.baseUrl = baseUrl || ''
     delete options.$http
+    delete options.baseUrl
     this.options = options
   })
   .implement(Queryable.store, store)
