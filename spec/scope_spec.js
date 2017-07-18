@@ -10,7 +10,7 @@ const Person = Model('Person')
     id: String
   })
   .implement(Protocol.Queryable.store, function (flow, object) {
-    return flow.resolve(true)
+    return flow.resolve(new Protocol.Queryable.Success())
   })
   .use(new Mixin.AutoUpdate())
   .use(new ScopeMixin())

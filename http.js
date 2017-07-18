@@ -28,9 +28,9 @@ function normalizeAngularResponse (mixin, model, response, generate = false) {
     } else {
       result = response.data
     }
-    return new Queryable.Success(response.status, result, response, mixin)
+    return new Queryable.Success(result, response.status, response, mixin)
   } else {
-    return new Queryable.Failure(response.status, response.data, response, mixin)
+    return new Queryable.Failure(response.data, response.status, response, mixin)
   }
 }
 

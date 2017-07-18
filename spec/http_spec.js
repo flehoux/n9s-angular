@@ -33,7 +33,7 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
       } else {
         let [id] = arg.url.split('/').slice(-1)
         return {
-          data: storage[id],
+          data: Object.assign({}, storage[id]),
           status: 200
         }
       }
@@ -41,18 +41,20 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
     POST: function (arg) {
       httpSpy('POST', arg)
       let data = Object.assign({}, arg.data)
+      delete data.$response
       if (arg.nas == null) {
         data.nas = idGetter()
       }
       storage[data.nas] = data
       return {
-        data: data,
+        data: Object.assign({}, data),
         status: 201
       }
     },
     PUT: function (arg) {
       httpSpy('PUT', arg)
       let data = Object.assign({}, arg.data)
+      delete data.$response
       storage[data.nas] = data
       return {
         data: Object.assign({}, arg.data),
@@ -87,6 +89,7 @@ describe('A simple model backed by a REST service through the Angular mixin', fu
   it('should send POST request to support <Model>.create()', function (done) {
     let data = {nas: idGetter(), firstName: 'John', lastName: 'Smith'}
     Person.create(data).then(function (person) {
+      console.log(storage)
       expect(httpSpy.calls.count()).toBe(1)
       let [method, request] = httpSpy.calls.argsFor(0)
       let response = person.$response
