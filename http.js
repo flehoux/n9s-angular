@@ -2,106 +2,175 @@ const {Mixin, Protocol} = require('nucleotides')
 const {Queryable, Identifiable, Storable} = Protocol
 const [GET, POST, PUT, DELETE] = ['GET', 'POST', 'PUT', 'DELETE']
 
-function buildRequest (mixin, model, method, object, params) {
-  let url = mixin.baseUrl + Identifiable.urlFor(model, method, object)
-  let options = Object.assign({}, mixin.options, {url, method})
-
-  if (method === POST || method === PUT) {
-    options.data = object.$clean
-  }
-  options.params = params
-
-  return mixin.$http(options)
+function joinUrlComponents (...cmps) {
+  return cmps
+    .filter((cmp) => typeof cmp === 'string' && cmp.length > 0)
+    .map((cmp, i) => {
+      if (cmp[0] === '/') cmp = cmp.slice(1)
+      if (cmp.slice(-1) === '/') cmp = cmp.slice(0, -1)
+      return cmp
+    })
+    .join('/')
 }
 
-function normalizeAngularResponse (mixin, model, response, generate = false) {
-  if (response.status < 400) {
-    let result
-    if (generate) {
-      if (response.data != null && response.data instanceof Array) {
-        result = response.data.map((object) => {
-          return Storable.decode(model, object)
-        })
-      } else {
-        result = Storable.decode(model, response.data)
-      }
-    } else {
-      result = response.data
-    }
-    return new Queryable.Success(result, response.status, response, mixin)
-  } else {
-    return new Queryable.Failure(response.data, response.status, response, mixin)
-  }
-}
-
-function store (mixin, flow, params) {
+function doStore (mixin, flow, params) {
   let idKey = Identifiable.idKey(this.constructor)
   if (this.$isNew) {
-    buildRequest(mixin, this.constructor, POST, this, params).then(
+    this.constructor.POST({body: this, params}).then(
       (response) => {
-        let resp = normalizeAngularResponse(mixin, null, response)
-        if (resp.data != null && resp.data.data != null && resp.data.data[idKey] != null) {
+        let resp = mixin.normalizeForQueryable(response)
+        let object = resp.data
+        if (object.data != null && object.data[idKey] != null) {
           this[idKey] = resp.data.data[idKey]
         }
         flow.resolve(resp)
       },
       (response) => {
-        flow.reject(normalizeAngularResponse(mixin, null, response))
+        flow.reject(mixin.normalizeForQueryable(response))
       }
     )
   } else {
-    buildRequest(mixin, this.constructor, PUT, this, params).then(
+    this.$PUT({params, body: this}).then(
       (response) => {
-        flow.resolve(normalizeAngularResponse(mixin, null, response))
+        flow.resolve(mixin.normalizeForQueryable(response))
       },
       (response) => {
-        flow.reject(normalizeAngularResponse(mixin, null, response))
+        flow.reject(mixin.normalizeForQueryable(response))
       }
     )
   }
 }
 
-function remove (mixin, flow, params) {
-  buildRequest(mixin, this.constructor, DELETE, this, params).then(
+function doRemove (mixin, flow, params) {
+  this.$DELETE({params}).then(
     (response) => {
-      flow.resolve(normalizeAngularResponse(mixin, null, response))
+      flow.resolve(mixin.normalizeForQueryable(response))
     },
     (response) => {
-      flow.reject(normalizeAngularResponse(mixin, null, response))
+      flow.reject(mixin.normalizeForQueryable(response))
     }
   )
 }
 
-function findOne (mixin, flow, object, params) {
+function doFindOne (mixin, flow, object, params) {
   if (object === null) {
     throw new Mixin.Error('You need to provide a key that will be used to find a single object', mixin)
   }
+  let objectId
   if (typeof object === 'number') {
-    object = object.toString()
+    objectId = object.toString()
   }
   let idKey = Identifiable.idKey(this)
   if (typeof object === 'string' && idKey) {
-    object = {[idKey]: object}
+    objectId = object
+    object = null
   }
-  buildRequest(mixin, this, GET, object, params).then(
+  this.GET(objectId, {params, object, decode: true}).then(
     (response) => {
-      flow.resolve(normalizeAngularResponse(mixin, this, response, true))
+      flow.resolve(mixin.normalizeForQueryable(response))
     },
     (response) => {
-      flow.reject(normalizeAngularResponse(mixin, this, response))
+      flow.reject(mixin.normalizeForQueryable(response))
     }
   )
 }
 
-function findMany (mixin, flow, params = {}) {
-  buildRequest(mixin, this, GET, null, params).then(
+function doFindMany (mixin, flow, params = {}) {
+  this.GET({params, decode: true}).then(
     (response) => {
-      flow.resolve(normalizeAngularResponse(mixin, this, response, true))
+      flow.resolve(mixin.normalizeForQueryable(response))
     },
     (response) => {
-      flow.reject(normalizeAngularResponse(mixin, this, response))
+      flow.reject(mixin.normalizeForQueryable(response))
     }
   )
+}
+
+function requestModelPerformer (verb) {
+  return function (mixin, route, options) {
+    let model = this
+    const {Model} = require('nucleotides')
+    if (typeof route === 'object') {
+      options = route
+      route = null
+    }
+    if (Model.isInstance(options.body)) {
+      options.body = Storable.encode(options.body)
+    }
+    let url = joinUrlComponents(mixin.baseUrl, Identifiable.urlFor(model, verb), route)
+    let promise = mixin.$http({
+      method: verb,
+      data: options.body,
+      params: options.params,
+      url
+    })
+    let decodedModel
+    if (options.decode === true) {
+      decodedModel = model
+    } else if (Model.isModel(options.decode)) {
+      decodedModel = model
+    }
+    if (decodedModel != null) {
+      promise = promise.then((response) => {
+        if (response.data != null && response.data instanceof Array) {
+          let decoded = response.data.map((object) => {
+            return Storable.decode(decodedModel, object)
+          })
+          decoded.$response = response
+          return decoded
+        } else if (response.data != null) {
+          let decoded = Storable.decode(decodedModel, response.data)
+          decoded.$response = response
+          return decoded
+        }
+      })
+    }
+    return promise
+  }
+}
+
+function requestObjectPerformer (verb) {
+  return function (mixin, route, options) {
+    let object = this
+    let model = object.constructor
+    const {Model} = require('nucleotides')
+    if (typeof route === 'object') {
+      options = route
+      route = null
+    }
+    if (Model.isInstance(options.body)) {
+      options.body = Storable.encode(options.body)
+    }
+    let url = joinUrlComponents(mixin.baseUrl, Identifiable.urlFor(object, verb), route)
+    let promise = mixin.$http({
+      method: verb,
+      data: options.body,
+      params: options.params,
+      url
+    })
+    let decodedModel
+    if (options.decode === true) {
+      decodedModel = model
+    } else if (Model.isModel(options.decode)) {
+      decodedModel = model
+    }
+    if (decodedModel != null) {
+      promise = promise.then((response) => {
+        if (response.data != null && response.data instanceof Array) {
+          let decoded = response.data.map((object) => {
+            return Storable.decode(decodedModel, object)
+          })
+          decoded.$response = response
+          return decoded
+        } else if (response.data != null) {
+          let decoded = Storable.decode(decodedModel, response.data)
+          decoded.$response = response
+          return decoded
+        }
+      })
+    }
+    return promise
+  }
 }
 
 var HttpMixin = Mixin('HttpMixin')
@@ -113,15 +182,42 @@ var HttpMixin = Mixin('HttpMixin')
       throw new Mixin.Error('The Angular.HttpMixin mixin requires the \'$http\' option', this)
     }
 
-    this.$http = $http
+    this.$httpService = $http
     this.baseUrl = baseUrl || ''
     delete options.$http
     delete options.baseUrl
     this.options = options
   })
-  .implement(Queryable.store, store)
-  .implement(Queryable.remove, remove)
-  .implement(Queryable.findOne, findOne)
-  .implement(Queryable.findMany, findMany)
+  .implement(Queryable.store, doStore)
+  .implement(Queryable.remove, doRemove)
+  .implement(Queryable.findOne, doFindOne)
+  .implement(Queryable.findMany, doFindMany)
+  .classMethod(GET, requestModelPerformer(GET))
+  .classMethod(POST, requestModelPerformer(POST))
+  .classMethod(PUT, requestModelPerformer(PUT))
+  .classMethod(DELETE, requestModelPerformer(DELETE))
+  .method('$' + GET, requestObjectPerformer(GET))
+  .method('$' + POST, requestObjectPerformer(POST))
+  .method('$' + PUT, requestObjectPerformer(PUT))
+  .method('$' + DELETE, requestObjectPerformer(DELETE))
+
+HttpMixin.prototype.$http = function (overrides) {
+  return this.$httpService(Object.assign({}, this.options, overrides))
+}
+
+HttpMixin.prototype.normalizeForQueryable = function (response) {
+  let result
+  if (response.$response) {
+    result = response
+    response = result.$response
+  } else {
+    result = response.data
+  }
+  if (response.status < 400) {
+    return new Queryable.Success(result, response.status, response, this)
+  } else {
+    return new Queryable.Failure(response.data, response.status, response, this)
+  }
+}
 
 module.exports = HttpMixin
