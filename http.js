@@ -94,6 +94,9 @@ function requestModelPerformer (verb) {
       options = route
       route = null
     }
+    if (options == null) {
+      options = {}
+    }
     if (Model.isInstance(options.body)) {
       options.body = Storable.encode(options.body)
     }
@@ -137,6 +140,9 @@ function requestObjectPerformer (verb) {
     if (typeof route === 'object') {
       options = route
       route = null
+    }
+    if (options == null) {
+      options = {}
     }
     if (Model.isInstance(options.body)) {
       options.body = Storable.encode(options.body)
