@@ -36,6 +36,7 @@ describe('A Model instance bound to a Angular Scope', function () {
     john.bindToScope(scope)
     john.lastName = 'McCarthy'
     expect(scope.spy).toHaveBeenCalled()
+    scope.$destroy()
   })
 
   it('should not trigger a digest cycle after the scope has been destroyed', function () {
@@ -45,6 +46,7 @@ describe('A Model instance bound to a Angular Scope', function () {
     scope.$destroy()
     john.lastName = 'McCarthy'
     expect(scope.spy).not.toHaveBeenCalled()
+    scope.$destroy()
   })
 
   it('should automatically trigger $autoUpdate on the model instance being bound to a scope', function (done) {
@@ -56,6 +58,7 @@ describe('A Model instance bound to a Angular Scope', function () {
     john2.$save().then(function () {
       expect(john.lastName).toBe('McCarthy')
       expect(scope.spy).toHaveBeenCalled()
+      scope.$destroy()
       done()
     })
   })
@@ -70,6 +73,7 @@ describe('A Collection of Model instances, bound to a Angular Scope', function (
     coll.bindToScope(scope)
     person.lastName = 'McCarthy'
     expect(scope.spy).toHaveBeenCalled()
+    scope.$destroy()
   })
 
   it('should trigger a digest cycle upon element addition', function () {
@@ -78,6 +82,7 @@ describe('A Collection of Model instances, bound to a Angular Scope', function (
     coll.bindToScope(scope)
     coll.push({firstName: 'John', lastName: 'Smith'})
     expect(scope.spy).toHaveBeenCalled()
+    scope.$destroy()
   })
 
   it('should trigger a digest cycle upon element removal', function () {
@@ -88,6 +93,7 @@ describe('A Collection of Model instances, bound to a Angular Scope', function (
     let person = coll.pop()
     expect(person.firstName).toBe('John')
     expect(scope.spy).toHaveBeenCalled()
+    scope.$destroy()
   })
 
   it('should not trigger a digest cycle after the scope has been destroyed', function () {
@@ -99,20 +105,23 @@ describe('A Collection of Model instances, bound to a Angular Scope', function (
     scope.$destroy()
     john.lastName = 'McCarthy'
     expect(scope.spy).not.toHaveBeenCalled()
+    scope.$destroy()
   })
 
   it('should automatically call $autoUpdate on the collection being bound to a scope', function (done) {
-    let coll = Person.createCollection()
-    coll.push({firstName: 'John', lastName: 'Smith', id: '1'})
     let john = new Person({firstName: 'John', lastName: 'Smith', id: '1'})
-    let john2 = coll[0]
-    let scope = new ScopeMock()
-    coll.bindToScope(scope)
-    john.lastName = 'McCarthy'
     john.$save().then(function () {
-      expect(john2.lastName).toBe('McCarthy')
-      expect(scope.spy).toHaveBeenCalled()
-      done()
+      let coll = Person.createCollection()
+      coll.push({firstName: 'John', lastName: 'Smith', id: '1'})
+      let scope = new ScopeMock()
+      coll.bindToScope(scope)
+      john.lastName = 'McCarthy'
+      john.$save().then(function () {
+        expect(scope.spy).toHaveBeenCalled()
+        expect(coll[0].lastName).toBe('McCarthy')
+        scope.$destroy()
+        done()
+      })
     })
   })
 })
