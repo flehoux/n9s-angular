@@ -21,7 +21,7 @@ function doStore (mixin, flow, params) {
         let resp = mixin.normalizeForQueryable(response)
         let object = resp.data
         if (object.data != null && object.data[idKey] != null) {
-          this[idKey] = resp.data.data[idKey]
+          this.$updateAttributes(object.data)
         }
         flow.resolve(resp)
       },
