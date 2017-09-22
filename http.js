@@ -111,7 +111,7 @@ function requestModelPerformer (verb) {
     if (options.decode === true) {
       decodedModel = model
     } else if (Model.isModel(options.decode)) {
-      decodedModel = model
+      decodedModel = options.decode
     }
     if (decodedModel != null) {
       promise = promise.then((response) => {
@@ -158,7 +158,7 @@ function requestObjectPerformer (verb) {
     if (options.decode === true) {
       decodedModel = model
     } else if (Model.isModel(options.decode)) {
-      decodedModel = model
+      decodedModel = options.decode
     }
     if (decodedModel != null) {
       promise = promise.then((response) => {
