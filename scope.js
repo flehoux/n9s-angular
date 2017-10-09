@@ -7,14 +7,20 @@ module.exports = Mixin('ScopeMixin')
     let scopeApply = (...args) => {
       scope.$applyAsync()
     }
-    scope.$on('$destroy', () => {
+    let unbind = () => {
       this.$emit('unmount')
       this.constructor.$emit('unmount', this)
       this.$off('change', scopeApply)
       this.$off('resolved', scopeApply)
-    })
+    }
+    let unbindScope = scope.$on('$destroy', unbind)
     this.$on('change', scopeApply)
     this.$on('resolved', scopeApply)
+
+    return () => {
+      unbind()
+      unbindScope()
+    }
   })
   .implement(Protocol.Collectable.prepareCollection, function (mixin, collection, options) {
     collection.bindToScope = function (scope) {
@@ -24,17 +30,22 @@ module.exports = Mixin('ScopeMixin')
           scope.$applyAsync()
         }
       }
-      let blindScopeApply = () => scope.$applyAsync()
-      scope.$on('$destroy', () => {
+      let bindScopeApply = () => scope.$applyAsync()
+      let unbindAll = () => {
         this.$emit('unmount')
         this.$model.$off('change', scopeApply)
         this.$model.$off('resolved', scopeApply)
-        this.$off('add', blindScopeApply)
-        this.$off('remove', blindScopeApply)
-      })
+        this.$off('add', bindScopeApply)
+        this.$off('remove', bindScopeApply)
+      }
+      let unbindScope = scope.$on('$destroy', unbindAll)
       this.$model.$on('change', scopeApply)
       this.$model.$on('resolved', scopeApply)
-      this.$on('add', blindScopeApply)
-      this.$on('remove', blindScopeApply)
+      this.$on('add', bindScopeApply)
+      this.$on('remove', bindScopeApply)
+      return () => {
+        unbindAll()
+        unbindScope()
+      }
     }
   })
