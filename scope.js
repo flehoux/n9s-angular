@@ -10,11 +10,11 @@ module.exports = Mixin('ScopeMixin')
     let unbind = () => {
       this.$emit('unmount')
       this.constructor.$emit('unmount', this)
-      this.$off('change', scopeApply)
+      this.$off('update', scopeApply)
       this.$off('resolved', scopeApply)
     }
     let unbindScope = scope.$on('$destroy', unbind)
-    this.$on('change', scopeApply)
+    this.$on('update', scopeApply)
     this.$on('resolved', scopeApply)
 
     return () => {
@@ -33,13 +33,13 @@ module.exports = Mixin('ScopeMixin')
       let bindScopeApply = () => scope.$applyAsync()
       let unbindAll = () => {
         this.$emit('unmount')
-        this.$model.$off('change', scopeApply)
+        this.$model.$off('update', scopeApply)
         this.$model.$off('resolved', scopeApply)
         this.$off('add', bindScopeApply)
         this.$off('remove', bindScopeApply)
       }
       let unbindScope = scope.$on('$destroy', unbindAll)
-      this.$model.$on('change', scopeApply)
+      this.$model.$on('update', scopeApply)
       this.$model.$on('resolved', scopeApply)
       this.$on('add', bindScopeApply)
       this.$on('remove', bindScopeApply)
