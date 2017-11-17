@@ -13,10 +13,10 @@ function joinUrlComponents (...cmps) {
     .join('/')
 }
 
-function doStore (mixin, flow, params) {
+function doStore (mixin, flow, params, extra) {
   let idKey = Identifiable.idKey(this.constructor)
   if (this.$isNew) {
-    this.constructor.POST({body: this, params}).then(
+    this.constructor.POST({body: this, params, extra}).then(
       (response) => {
         let resp = mixin.normalizeForQueryable(response)
         let object = resp.data
@@ -30,7 +30,7 @@ function doStore (mixin, flow, params) {
       }
     )
   } else {
-    this.$PUT({params, body: this}).then(
+    this.$PUT({body: this, params, extra}).then(
       (response) => {
         flow.resolve(mixin.normalizeForQueryable(response))
       },
@@ -41,8 +41,8 @@ function doStore (mixin, flow, params) {
   }
 }
 
-function doRemove (mixin, flow, params) {
-  this.$DELETE({params}).then(
+function doRemove (mixin, flow, params, extra) {
+  this.$DELETE({params, extra}).then(
     (response) => {
       flow.resolve(mixin.normalizeForQueryable(response))
     },
@@ -100,6 +100,9 @@ function requestModelPerformer (verb) {
     if (Model.isInstance(options.body)) {
       options.body = Storable.encode(options.body)
     }
+    if (options.extra != null) {
+      options.body = Object.assign({}, options.body || {}, options.extra)
+    }
     let url = joinUrlComponents(mixin.baseUrl, Identifiable.urlFor(model, verb), route)
     let promise = mixin.$http({
       method: verb,
@@ -146,6 +149,9 @@ function requestObjectPerformer (verb) {
     }
     if (Model.isInstance(options.body)) {
       options.body = Storable.encode(options.body)
+    }
+    if (options.extra != null) {
+      options.body = Object.assign({}, options.body || {}, options.extra)
     }
     let url = joinUrlComponents(mixin.baseUrl, Identifiable.urlFor(object, verb), route)
     let promise = mixin.$http({
