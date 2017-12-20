@@ -10,7 +10,7 @@ angular
 .module('myapp.person', [])
 .factory('Person', function ($http) {
   let Angular = require('n9s-angular')
-  let {Model} = require('nucleotides')
+  let {Model} = require('@n9s/core')
 
   let Person = Model('Person')
     .attributes({

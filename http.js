@@ -1,4 +1,4 @@
-const {Mixin, Protocol} = require('nucleotides')
+const {Mixin, Protocol} = require('@n9s/core')
 const {Queryable, Identifiable, Storable} = Protocol
 const [GET, POST, PUT, DELETE] = ['GET', 'POST', 'PUT', 'DELETE']
 
@@ -89,7 +89,7 @@ function doFindMany (mixin, flow, params = {}) {
 function requestModelPerformer (verb) {
   return function (mixin, route, options) {
     let model = this
-    const {Model} = require('nucleotides')
+    const {Model} = require('@n9s/core')
     if (typeof route === 'object') {
       options = route
       route = null
@@ -139,7 +139,7 @@ function requestObjectPerformer (verb) {
   return function (mixin, route, options) {
     let object = this
     let model = object.constructor
-    const {Model} = require('nucleotides')
+    const {Model} = require('@n9s/core')
     if (typeof route === 'object') {
       options = route
       route = null

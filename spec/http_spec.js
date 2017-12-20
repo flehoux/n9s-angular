@@ -1,7 +1,7 @@
 /* global describe it expect jasmine afterEach */
 
 describe('A simple model backed by a REST service through the Angular mixin', function () {
-  const {Model, Protocol} = require('nucleotides')
+  const {Model, Protocol} = require('@n9s/core')
   const HttpMixin = require('../http')
   const httpSpy = jasmine.createSpy()
   const storage = {}

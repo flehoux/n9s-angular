@@ -2,6 +2,6 @@ module.exports = {
   HttpMixin: require('./http'),
   ScopeMixin: require('./scope'),
   patchPromises: function ($q) {
-    require('nucleotides').setPromiseFactory($q)
+    require('@n9s/core').setPromiseFactory($q)
   }
 }

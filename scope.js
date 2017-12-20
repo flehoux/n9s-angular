@@ -1,4 +1,4 @@
-const {Mixin, Protocol} = require('nucleotides')
+const {Mixin, Protocol} = require('@n9s/core')
 
 module.exports = Mixin('ScopeMixin')
   .method('bindToScope', function (mixin, scope, options) {
