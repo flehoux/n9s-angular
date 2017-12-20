@@ -1,6 +1,6 @@
 {
-  "name": "n9s-angular",
-  "version": "1.0.0",
+  "name": "@n9s/angular",
+  "version": "0.1.0",
   "description": "Angular Mixin for nucleotides.js",
   "main": "index.js",
   "scripts": {
@@ -13,6 +13,7 @@
   "author": "mathieu@damours.org",
   "license": "MIT",
   "devDependencies": {
+    "@n9s/core": "^0.2.0",
     "babel-polyfill": "^6.23.0",
     "babel-preset-env": "^1.6.1",
     "babelify": "^7.3.0",
@@ -24,7 +25,6 @@
     "karma": "^1.7.0",
     "karma-chrome-launcher": "^2.2.0",
     "karma-jasmine": "^1.1.0",
-    "nucleotides": "matehat/nucleotides.js#master",
     "through2": "^2.0.3",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0"
