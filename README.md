@@ -1,5 +1,5 @@
-# n9s-angular
-Angular Mixins for [Nucleotides.js][1]
+# Nucleotides ❤️ Angular.js
+Angular Mixins for [Nucleotides][1]
 
 ![Travis](https://travis-ci.org/matehat/n9s-angular.svg?branch=master)
 
@@ -48,4 +48,4 @@ angular
 })
 ```
 
-[1]: https://github.com/matehat/nucleotides.js
+[1]: https://github.com/n9s/nucleotides
