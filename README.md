@@ -9,7 +9,7 @@ Angular Mixins for [Nucleotides.js][1]
 angular
 .module('myapp.person', [])
 .factory('Person', function ($http) {
-  let Angular = require('n9s-angular')
+  let Angular = require('@n9s/angular')
   let {Model} = require('@n9s/core')
 
   let Person = Model('Person')
