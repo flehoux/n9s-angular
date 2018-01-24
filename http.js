@@ -209,11 +209,17 @@ var HttpMixin = Mixin('HttpMixin')
   .classMethod(PUT, requestModelPerformer(PUT))
   .classMethod(DELETE, requestModelPerformer(DELETE))
   .classMethod(PATCH, requestModelPerformer(PATCH))
+  .classMethod('REQUEST', function (verb, ...args) {
+    return requestModelPerformer(verb)(...args)
+  })
   .method('$' + GET, requestObjectPerformer(GET))
   .method('$' + POST, requestObjectPerformer(POST))
   .method('$' + PUT, requestObjectPerformer(PUT))
   .method('$' + DELETE, requestObjectPerformer(DELETE))
   .method('$' + PATCH, requestObjectPerformer(PATCH))
+  .method('$REQUEST', function (verb, ...args) {
+    return requestObjectPerformer(verb)(...args)
+  })
 
 HttpMixin.prototype.$http = function (overrides) {
   return this.$httpService(Object.assign({}, this.options, overrides))
