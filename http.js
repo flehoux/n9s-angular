@@ -1,6 +1,6 @@
 const {Mixin, Protocol} = require('@n9s/core')
 const {Queryable, Identifiable, Storable} = Protocol
-const [GET, POST, PUT, DELETE] = ['GET', 'POST', 'PUT', 'DELETE']
+const [GET, POST, PUT, DELETE, PATCH] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
 
 function joinUrlComponents (...cmps) {
   return cmps
@@ -208,10 +208,12 @@ var HttpMixin = Mixin('HttpMixin')
   .classMethod(POST, requestModelPerformer(POST))
   .classMethod(PUT, requestModelPerformer(PUT))
   .classMethod(DELETE, requestModelPerformer(DELETE))
+  .classMethod(PATCH, requestModelPerformer(PATCH))
   .method('$' + GET, requestObjectPerformer(GET))
   .method('$' + POST, requestObjectPerformer(POST))
   .method('$' + PUT, requestObjectPerformer(PUT))
   .method('$' + DELETE, requestObjectPerformer(DELETE))
+  .method('$' + PATCH, requestObjectPerformer(PATCH))
 
 HttpMixin.prototype.$http = function (overrides) {
   return this.$httpService(Object.assign({}, this.options, overrides))
