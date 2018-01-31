@@ -108,6 +108,8 @@ function requestModelPerformer (verb) {
       method: verb,
       data: options.body,
       params: options.params,
+      headers: options.headers,
+      responseType: options.responseType,
       url
     })
     let decodedModel
@@ -158,6 +160,8 @@ function requestObjectPerformer (verb) {
       method: verb,
       data: options.body,
       params: options.params,
+      headers: options.headers,
+      responseType: options.responseType,
       url
     })
     let decodedModel
