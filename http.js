@@ -21,7 +21,7 @@ function doStore (mixin, flow, params, extra) {
         let resp = mixin.normalizeForQueryable(response)
         let object = resp.data
         if (object.data != null && object.data[idKey] != null) {
-          this.$updateAttributes(object.data)
+          this.$updateAttributes(require('lodash.clonedeep')(object.data))
         }
         flow.resolve(resp)
       },
