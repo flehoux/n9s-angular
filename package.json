@@ -1,6 +1,6 @@
 {
   "name": "@n9s/angular",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Angular Mixin for nucleotides.js",
   "main": "index.js",
   "scripts": {
