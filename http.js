@@ -14,6 +14,9 @@ function joinUrlComponents (...cmps) {
 }
 
 function doStore (mixin, flow, params, extra) {
+  if (mixin.options.store === false) {
+    return flow.continue()
+  }
   let idKey = Identifiable.idKey(this.constructor)
   if (this.$isNew) {
     this.constructor.POST({body: this, params, extra}).then(
@@ -42,6 +45,9 @@ function doStore (mixin, flow, params, extra) {
 }
 
 function doRemove (mixin, flow, params, extra) {
+  if (mixin.options.remove === false) {
+    return flow.continue()
+  }
   this.$DELETE({params, extra}).then(
     (response) => {
       flow.resolve(mixin.normalizeForQueryable(response))
@@ -53,6 +59,9 @@ function doRemove (mixin, flow, params, extra) {
 }
 
 function doFindOne (mixin, flow, object, params) {
+  if (mixin.options.findOne === false) {
+    return flow.continue()
+  }
   if (object === null) {
     throw new Mixin.Error('You need to provide a key that will be used to find a single object', mixin)
   }
@@ -76,6 +85,9 @@ function doFindOne (mixin, flow, object, params) {
 }
 
 function doFindMany (mixin, flow, params = {}) {
+  if (mixin.options.findMany === false) {
+    return flow.continue()
+  }
   this.GET({params, decode: true}).then(
     (response) => {
       flow.resolve(mixin.normalizeForQueryable(response))
@@ -202,6 +214,7 @@ var HttpMixin = Mixin('HttpMixin')
     this.baseUrl = baseUrl || ''
     delete options.$http
     delete options.baseUrl
+
     this.options = options
   })
   .implement(Queryable.store, doStore)
