@@ -2,14 +2,12 @@ const {Mixin, Protocol} = require('@n9s/core')
 
 module.exports = Mixin('ScopeMixin')
   .method('bindToScope', function (mixin, scope, options) {
-    this.$emit('mount', options)
-    this.constructor.$emit('mount', this, options)
+    this.$mount(options)
     let scopeApply = (...args) => {
       scope.$applyAsync()
     }
     let unbind = () => {
-      this.$emit('unmount')
-      this.constructor.$emit('unmount', this)
+      this.$unmount()
       this.$off('update', scopeApply)
       this.$off('resolved', scopeApply)
     }
@@ -24,7 +22,7 @@ module.exports = Mixin('ScopeMixin')
   })
   .implement(Protocol.Collectable.prepareCollection, function (mixin, collection, options) {
     collection.bindToScope = function (scope) {
-      this.$emit('mount', options)
+      this.$mount()
       let scopeApply = (object) => {
         if (this.$has(object)) {
           scope.$applyAsync()
@@ -32,7 +30,7 @@ module.exports = Mixin('ScopeMixin')
       }
       let bindScopeApply = () => scope.$applyAsync()
       let unbindAll = () => {
-        this.$emit('unmount')
+        this.$unmount()
         this.$model.$off('update', scopeApply)
         this.$model.$off('resolved', scopeApply)
         this.$off('add', bindScopeApply)
