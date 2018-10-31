@@ -19,7 +19,7 @@
     "@n9s/core": "^0.2.0",
     "babelify": "^10.0.0",
     "browserify": "^16.2.3",
-    "jasmine": "^2.6.0"
+    "jasmine": "^3.3.0"
   },
   "browserify": {
     "transform": [
